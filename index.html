@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Campus Navigation</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:Poppins,Arial,sans-serif}
+
+#startPage{
+ width:100%;height:100dvh;background:url("Start.jpg") center/cover no-repeat;
+ display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden
+}
+#blurArea{position:absolute;inset:0;backdrop-filter:blur(10px);transition:1s}
+#startPage.clear #blurArea{backdrop-filter:blur(0)}
+
+.start-logo{
+ position:absolute;top:20%;left:50%;transform:translateX(-50%);
+ width:120px;height:120px;object-fit:contain;z-index:5;
+ filter:drop-shadow(0 0 8px rgba(255,255,255,.8)) drop-shadow(0 0 18px rgba(0,170,255,.7))
+}
+
+.start-button{
+ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+ width:260px;height:120px;border:0;background:transparent;color:#fff;
+ font-size:55px;font-weight:800;letter-spacing:8px;cursor:pointer;
+ text-shadow:0 0 10px #00aaff,0 0 25px #06f;transition:.3s;z-index:5
+}
+.start-button:hover{
+ transform:translate(-50%,-50%) scale(1.08);
+ text-shadow:0 0 15px #0ff,0 0 35px #06f
+}
+.start-button:active{
+ transform:translate(-50%,-50%) scale(.88);
+ filter:brightness(1.5);transition:.08s
+}
+.start-button:active:after{
+ content:"";position:absolute;top:50%;left:50%;width:20px;height:20px;
+ border:2px solid #0ff;border-radius:50%;transform:translate(-50%,-50%);
+ pointer-events:none;animation:startRipple .5s ease-out
+}
+@keyframes startRipple{
+ to{width:300px;height:300px;opacity:0}
+}
+
+#loadingScreen{
+ position:absolute;inset:0;z-index:10;display:none;flex-direction:column;
+ justify-content:center;align-items:center;background:rgba(0,0,0,.35);color:#fff
+}
+#loadingStatus{
+ margin-bottom:15px;font-size:14px;font-weight:700;letter-spacing:3px;text-align:center;
+ text-shadow:0 0 8px #0af,0 0 15px #06f
+}
+.loading-container{width:320px;max-width:75%;text-align:center}
+.loading-bar{
+ width:100%;height:14px;background:rgba(255,255,255,.2);
+ border:2px solid rgba(255,255,255,.8);border-radius:4px;overflow:hidden;
+ box-shadow:0 0 10px rgba(0,170,255,.5)
+}
+#loadingProgress{
+ width:0;height:100%;background:linear-gradient(90deg,#06f,#0af,#0ff);
+ transition:width .08s linear;box-shadow:0 0 12px #0af
+}
+#loadingPercent{
+ margin-top:8px;font-size:11px;font-weight:600;letter-spacing:2px
+}
+
+#mainPage{
+ display:none;width:100%;height:100dvh;
+ background:url("main-background.jpg") center/cover no-repeat;
+ overflow:hidden;position:relative
+}
+
+.menu-toggle{
+ position:fixed;top:15px;left:15px;width:45px;height:45px;border:0;border-radius:8px;
+ background:rgba(255,255,255,.9);display:flex;flex-direction:column;
+ justify-content:center;align-items:center;gap:5px;cursor:pointer;z-index:20;
+ box-shadow:0 3px 12px rgba(0,0,0,.2);transition:.25s
+}
+.menu-toggle:hover{transform:scale(1.05)}
+.menu-toggle span{
+ width:25px;height:3px;background:#0754b8;border-radius:5px
+}
+
+.sidebar{
+ position:fixed;left:-110px;top:0;width:110px;height:100dvh;
+ background:url("side.jpg") center/cover no-repeat;padding:20px 7px;
+ display:flex;flex-direction:column;box-shadow:5px 0 20px rgba(0,0,0,.15);
+ z-index:15;transition:left .3s
+}
+.sidebar.open{left:0}
+.sidebar.open~.content{
+ left:110px;width:calc(100% - 110px)
+}
+
+.sidebar-logo{
+ width:55px;height:55px;object-fit:contain;display:block;margin:0 auto 8px;
+ filter:drop-shadow(0 0 5px rgba(0,120,255,.5))
+}
+.logo{text-align:center;margin:55px 0 25px}
+.logo h1{
+ font-size:15px;font-weight:800;letter-spacing:.5px;color:#0754b8
+}
+.logo p{
+ font-size:6px;font-weight:500;color:#777;margin-top:5px;line-height:9px
+}
+
+.menu{display:flex;flex-direction:column;gap:6px}
+.menu button{
+ width:100%;padding:10px 5px;border:0;border-radius:7px;background:transparent;
+ text-align:left;font-size:9px;font-weight:600;color:#333;cursor:pointer;
+ transition:.25s;line-height:12px
+}
+.menu button:hover{
+ background:#e7f1ff;color:#0754b8;transform:translateX(3px)
+}
+.menu button.active{
+ background:#0754b8;color:#fff
+}
+
+.content{
+ position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100dvh;
+ padding:75px 20px 20px;overflow:hidden;min-width:0;
+ background:url("front.jpg") center/cover no-repeat;
+ transition:left .3s,width .3s
+}
+
+.content h2{
+ text-align:center;font-size:28px;font-weight:800;color:#0754b8;
+ letter-spacing:1px;line-height:1.1
+}
+.content>.section>p{text-align:center}
+.content p{
+ margin-top:8px;font-size:13px;color:#555;max-width:100%
+}
+
+.box{
+ margin:20px auto 0;width:100%;max-width:800px;padding:20px;
+ background:rgba(255,255,255,.9);border-radius:15px;
+ box-shadow:0 10px 30px rgba(0,0,0,.1);overflow:hidden
+}
+.box h3{
+ font-size:17px;font-weight:700;color:#0754b8
+}
+.box p{text-align:left}
+
+.map-container{
+ position:relative;width:100%;margin-top:10px
+}
+.campus-map{
+ width:100%;height:auto;display:block;border-radius:10px
+}
+
+/* =========================
+   MAP MARKERS
+   ========================= */
+
+.map-hotspot{
+ position:absolute!important;
+ transform:translate(-50%,-50%)!important;
+ width:clamp(8px,1.2vw,14px)!important;
+ height:clamp(8px,1.2vw,14px)!important;
+ min-width:8px!important;
+ max-width:14px!important;
+ min-height:8px!important;
+ max-height:14px!important;
+ padding:0!important;
+ margin:0!important;
+ border:2px solid #fff!important;
+ border-radius:50%!important;
+ background:#0754b8!important;
+ cursor:pointer;
+ z-index:10;
+ display:none!important;
+ box-shadow:
+  0 0 5px rgba(7,84,184,.9),
+  0 0 12px rgba(0,170,255,.7)
+}
+
+/* FLAGPOLE POSITION */
+.flagpole-marker{
+ left:47%!important;
+ top:45%!important;
+}
+
+/* GULAYAN POSITION */
+.gulayan-marker{
+ left:60%!important;
+ top:29%!important;
+}
+
+/* NEW — NORTH BUILDING / YELLOW ARROW POSITION */
+.northbuilding-marker{
+ left:50%!important;
+ top:7%!important;
+ background:#e53935!important;
+ box-shadow:
+  0 0 5px rgba(229,57,53,.9),
+  0 0 12px rgba(255,82,82,.7)!important;
+}
+
+.map-hotspot.located,
+.map-hotspot.gulayan-located,
+.map-hotspot.northbuilding-located{
+ display:block!important;
+ animation:locationPulse 1s infinite
+}
+
+.map-hotspot.gulayan-located{
+ background:#008cff!important;
+}
+.map-hotspot.northbuilding-located{
+ background:#e53935!important;
+}
+
+.map-hotspot:hover{
+ transform:translate(-50%,-50%) scale(1.4)!important
+}
+
+.map-hotspot:active{
+ transform:translate(-50%,-50%) scale(.8)!important
+}
+
+@keyframes locationPulse{
+ 0%{
+  transform:translate(-50%,-50%) scale(1)!important;
+ }
+ 50%{
+  transform:translate(-50%,-50%) scale(2.5)!important;
+ }
+ 100%{
+  transform:translate(-50%,-50%) scale(1)!important;
+ }
+}
+
+/* ========================= */
+
+.box button:not(.map-hotspot){
+ display:block;width:100%;padding:12px;margin-top:8px;border:0;
+ border-radius:8px;background:#0754b8;color:#fff;font-size:12px;
+ font-weight:600;cursor:pointer;transition:.2s
+}
+.box button:not(.map-hotspot):hover{
+ background:#06449a;transform:translateY(-2px)
+}
+
+.about-gallery{
+ max-height:60vh;overflow-y:auto;padding-right:6px;
+ display:flex;flex-direction:column;gap:10px
+}
+.about-gallery::-webkit-scrollbar{width:6px}
+.about-gallery::-webkit-scrollbar-track{
+ background:#e5e5e5;border-radius:10px
+}
+.about-gallery::-webkit-scrollbar-thumb{
+ background:#0754b8;border-radius:10px
+}
+.about-gallery img{
+ width:100%;height:auto;display:block;border-radius:12px;
+ object-fit:contain;cursor:zoom-in
+}
+.about-text{
+ padding:2px 3px 15px;margin-bottom:5px
+}
+.about-text p{
+ margin-top:0;text-align:left;line-height:1.6
+}
+
+/* =========================
+   PAGES
+   ========================= */
+
+#flagpolePage,
+#gulayanPage,
+#northbuildingPage{
+ position:fixed;inset:0;width:100%;height:100dvh;z-index:90;
+ display:none;
+ background:linear-gradient(rgba(255,255,255,.92),rgba(240,247,255,.96));
+ overflow-y:auto;padding:20px;
+ animation:pageOpen .3s ease
+}
+
+#flagpolePage.active,
+#gulayanPage.active,
+#northbuildingPage.active{
+ display:block
+}
+
+@keyframes pageOpen{
+ from{opacity:0;transform:scale(.98)}
+ to{opacity:1;transform:scale(1)}
+}
+
+.flagpole-detail,
+.gulayan-detail,
+.northbuilding-detail{
+ width:100%;max-width:800px;margin:auto;padding:20px 0 50px
+}
+
+.flagpole-back,
+.gulayan-back,
+.northbuilding-back{
+ display:block;width:100%;max-width:800px;margin:0 auto 20px;
+ padding:12px 18px;border:0;border-radius:9px;
+ background:#0754b8;color:#fff;font-size:13px;font-weight:700;
+ cursor:pointer;box-shadow:0 5px 15px rgba(0,0,0,.15);
+ transition:.2s
+}
+
+.flagpole-back:hover,
+.gulayan-back:hover,
+.northbuilding-back:hover{
+ background:#06449a;transform:translateY(-2px)
+}
+
+.northbuilding-back{background:#c62828}
+.northbuilding-back:hover{background:#b71c1c}
+
+.flagpole-title,
+.gulayan-title,
+.northbuilding-title{
+ text-align:center;font-size:28px;font-weight:800;
+ color:#0754b8;margin-bottom:15px
+}
+.northbuilding-title{color:#c62828}
+
+.flagpole-card,
+.gulayan-card,
+.northbuilding-card{
+ width:100%;background:#fff;border-radius:15px;padding:18px;
+ box-shadow:0 10px 30px rgba(0,0,0,.12)
+}
+
+.flagpole-image,
+.gulayan-image,
+.northbuilding-image{
+ width:100%;max-height:60vh;object-fit:contain;
+ display:block;margin:auto;border-radius:12px;cursor:zoom-in
+}
+
+.flagpole-card h3,
+.gulayan-card h3,
+.northbuilding-card h3{
+ margin:20px 0 8px;font-size:20px;font-weight:800;color:#0754b8
+}
+.northbuilding-card h3{color:#c62828}
+
+.flagpole-card p,
+.gulayan-card p,
+.northbuilding-card p{
+ margin:0 0 15px;font-size:14px;line-height:1.8;
+ color:#444;text-align:left
+}
+
+/* =========================
+   IMAGE VIEWER
+   ========================= */
+
+.image-viewer{
+ display:none;position:fixed;inset:0;z-index:100;width:100%;
+ height:100dvh;justify-content:center;align-items:center;padding:20px;
+ background:rgba(0,0,0,.45);
+ backdrop-filter:blur(12px);
+ -webkit-backdrop-filter:blur(12px);
+ cursor:zoom-out
+}
+.image-viewer.active{display:flex}
+.image-viewer img{
+ max-width:95%;max-height:95%;width:auto;height:auto;
+ object-fit:contain;border-radius:10px;
+ box-shadow:0 0 30px rgba(0,0,0,.6)
+}
+
+/* =========================
+   LOCATE POPUPS
+   ========================= */
+
+.locate-prompt{
+ position:fixed;inset:0;z-index:200;display:none;
+ justify-content:center;align-items:center;padding:20px;
+ background:rgba(0,0,0,.45);
+ backdrop-filter:blur(8px);
+ -webkit-backdrop-filter:blur(8px)
+}
+
+.locate-prompt.active{
+ display:flex
+}
+
+.locate-box{
+ width:100%;max-width:360px;padding:28px 22px;
+ background:rgba(255,255,255,.97);border-radius:18px;
+ text-align:center;box-shadow:0 15px 40px rgba(0,0,0,.3);
+ animation:locatePop .25s ease
+}
+
+@keyframes locatePop{
+ from{opacity:0;transform:scale(.8)}
+ to{opacity:1;transform:scale(1)}
+}
+
+.locate-icon{
+ font-size:40px;margin-bottom:8px
+}
+
+.locate-box h2{
+ color:#0754b8;font-size:20px;font-weight:800;
+ letter-spacing:1px
+}
+
+.locate-box p{
+ margin:10px 0 20px;color:#555;font-size:12px;line-height:1.6
+}
+
+.locate-buttons{
+ display:flex;gap:10px
+}
+
+.locate-buttons button{
+ flex:1;padding:11px;border:0;border-radius:8px;
+ font-family:Poppins,Arial,sans-serif;font-size:12px;
+ font-weight:700;cursor:pointer;transition:.2s
+}
+
+.locate-buttons button:first-child{
+ background:#0754b8;color:#fff
+}
+.locate-buttons button:last-child{
+ background:#e8e8e8;color:#444
+}
+.locate-buttons button:hover{
+ transform:translateY(-2px)
+}
+.locate-buttons button:first-child:hover{
+ background:#06449a
+}
+
+.section{display:none}
+.section.active{display:block}
+
+/* FIXED MAP ALIGNMENT ON LARGE SCREENS */
+@media(min-width:1200px){
+ .box{max-width:100%;padding:15px}
+ .campus-map{
+  width:100%;
+  height:auto;
+  object-fit:initial
+ }
+ .about-gallery{max-height:65vh}
+}
+
+@media(max-width:400px){
+
+ .sidebar{
+  width:85px;left:-85px;padding:15px 5px
+ }
+
+ .sidebar.open~.content{
+  left:85px;width:calc(100% - 85px)
+ }
+
+ .content{
+  width:100%;padding:70px 12px 12px
+ }
+
+ .menu-toggle{
+  width:40px;height:40px;top:12px;left:12px
+ }
+
+ .menu-toggle span{width:22px}
+
+ .logo{margin:50px 0 20px}
+ .logo h1{font-size:11px}
+ .logo p{font-size:5px;line-height:8px}
+ .sidebar-logo{width:45px;height:45px}
+
+ .menu{gap:5px}
+
+ .menu button{
+  padding:8px 4px;font-size:8px;line-height:11px
+ }
+
+ .content h2{font-size:21px}
+ .content p{font-size:10px}
+
+ .box{
+  padding:12px;margin-top:12px
+ }
+
+ .box h3{font-size:14px}
+
+ .box button:not(.map-hotspot){
+  padding:9px;font-size:9px
+ }
+
+ .loading-container{max-width:80%}
+ #loadingStatus{font-size:11px;letter-spacing:2px}
+ #loadingPercent{font-size:9px}
+ .start-logo{width:85px;height:85px;top:19%}
+
+ #flagpolePage,
+ #gulayanPage,
+ #northbuildingPage{
+  padding:12px
+ }
+
+ .flagpole-detail,
+ .gulayan-detail,
+ .northbuilding-detail{
+  padding:5px 0 30px
+ }
+
+ .flagpole-title,
+ .gulayan-title,
+ .northbuilding-title{
+  font-size:22px;margin-bottom:12px
+ }
+
+ .flagpole-card,
+ .gulayan-card,
+ .northbuilding-card{
+  padding:12px;border-radius:12px
+ }
+
+ .flagpole-card h3,
+ .gulayan-card h3,
+ .northbuilding-card h3{
+  font-size:16px;margin-top:15px
+ }
+
+ .flagpole-card p,
+ .gulayan-card p,
+ .northbuilding-card p{
+  font-size:11px;line-height:1.7
+ }
+
+ .flagpole-back,
+ .gulayan-back,
+ .northbuilding-back{
+  font-size:11px;padding:10px
+ }
+
+ .flagpole-image,
+ .gulayan-image,
+ .northbuilding-image{
+  max-height:55vh;border-radius:9px
+ }
+
+ .about-gallery{
+  max-height:58vh;gap:9px;padding-right:4px
+ }
+
+ .about-gallery img{border-radius:9px}
+
+ .about-text p{
+  font-size:10px;line-height:1.5
+ }
+
+ .image-viewer{padding:10px}
+
+ .image-viewer img{
+  max-width:98%;max-height:95%;border-radius:8px
+ }
+
+ .locate-box{
+  max-width:300px;padding:22px 17px
+ }
+
+ .locate-icon{font-size:32px}
+
+ .locate-box h2{font-size:17px}
+
+ .locate-box p{font-size:10px}
+
+ .locate-buttons button{
+  padding:9px;font-size:10px
+ }
+}
+</style>
+</head>
+<body>
+
+<!-- START PAGE -->
+<div id="startPage">
+ <div id="blurArea"></div>
+ <img src="school-logo.png" alt="School Logo" class="start-logo">
+ <div id="loadingScreen">
+  <div id="loadingStatus">UNDERWAY PLEASE WAIT....</div>
+  <div class="loading-container">
+   <div class="loading-bar"><div id="loadingProgress"></div></div>
+   <div id="loadingPercent">0%</div>
+  </div>
+ </div>
+ <button class="start-button" onclick="startNavigation()">START</button>
+</div>
+
+<!-- MAIN PAGE -->
+<div id="mainPage">
+ <button class="menu-toggle" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+ </button>
+
+ <div class="sidebar" id="sidebar">
+  <div class="logo">
+   <img src="school-logo.png" alt="School Logo" class="sidebar-logo">
+   <h1>CAMPUS NAV</h1>
+   <p>QR-BASED NAVIGATION SYSTEM</p>
+  </div>
+  <div class="menu">
+   <button class="active" onclick="showSection('home',this)">Home</button>
+   <button onclick="showSection('destination',this)">Destination</button>
+   <button onclick="showSection('map',this)">Map</button>
+   <button onclick="showSection('qr',this)">Scan QR</button>
+   <button onclick="showSection('about',this)">About</button>
+  </div>
+ </div>
+
+ <div class="content">
+  <!-- HOME -->
+  <div id="home" class="section active">
+   <h2>WELCOME</h2>
+   <p>Welcome to the Campus Navigation System.</p>
+   <div class="box">
+    <h3>Campus Navigation</h3>
+    <p>Easily find buildings, rooms, and important locations around the campus.</p>
+   </div>
+  </div>
+
+  <!-- DESTINATION -->
+  <div id="destination" class="section">
+   <h2>CHOOSE DESTINATION</h2>
+   <p>Select where you want to go.</p>
+   <div class="box">
+    <button onclick="askLocateFlagpole()">Flagpole</button>
+    <button onclick="askLocateGulayan()">Gulayan</button>
+    <button onclick="askLocateNorthBuilding()">Scouts</button>
+    <button>Library</button>
+    <button>ICT Laboratory</button>
+    <button>Main Building</button>
+    <button>Canteen</button>
+    <button>Registrar</button>
+   </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map" class="section">
+   <h2>CAMPUS MAP</h2>
+   <p>Your campus map will appear here.</p>
+   <div class="box">
+    <h3>CAMPUS MAP</h3>
+    <div class="map-container">
+     <img src="map.jpg" alt="Campus Map" class="campus-map">
+
+     <!-- FLAGPOLE -->
+     <button class="map-hotspot flagpole-marker"
+      onclick="openFlagpole()"
+      aria-label="View Flagpole"
+      title="Flagpole"></button>
+
+     <!-- GULAYAN -->
+     <button class="map-hotspot gulayan-marker"
+      onclick="openGulayan()"
+      aria-label="View Gulayan"
+      title="Gulayan"></button>
+
+     <!-- NORTH BUILDING / YELLOW ARROW -->
+     <button class="map-hotspot northbuilding-marker"
+      onclick="openNorthBuilding()"
+      aria-label="View Scouts"
+      title="Scouts"></button>
+
+    </div>
+   </div>
+  </div>
+
+  <!-- QR -->
+  <div id="qr" class="section">
+   <h2>SCAN QR CODE</h2>
+   <p>Scan a QR code to identify your current campus location.</p>
+   <div class="box">
+    <h3>QR SCANNER</h3>
+    <p>QR scanner will be added here later.</p>
+   </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="about" class="section">
+   <h2>ABOUT</h2>
+   <p>QR-Based Campus Navigation System</p>
+   <div class="box">
+    <div class="about-gallery">
+
+     <img src="image1.jpg" alt="About Image 1">
+     <div class="about-text">
+      <p>This image shows the first part of our QR-Based Campus Navigation System project.</p>
+     </div>
+
+     <img src="image2.jpg" alt="About Image 2">
+     <div class="about-text">
+      <p>The system is designed to help students and visitors easily find important locations around the campus.</p>
+     </div>
+
+     <img src="image3.jpg" alt="About Image 3">
+     <div class="about-text">
+      <p>QR codes can be used to provide quick access to information about different areas of the school.</p>
+     </div>
+
+     <img src="image4.jpg" alt="About Image 4">
+     <div class="about-text">
+      <p>The campus map helps users understand the location of buildings, rooms, and other important areas.</p>
+     </div>
+
+     <img src="image5.jpg" alt="About Image 5">
+     <div class="about-text">
+      <p>This project aims to make campus navigation easier, faster, and more convenient for new students and visitors.</p>
+     </div>
+
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+
+<!-- FLAGPOLE PAGE -->
+<div id="flagpolePage">
+ <div class="flagpole-detail">
+  <button class="flagpole-back" onclick="closeFlagpole()">← BACK TO MAP</button>
+  <h2 class="flagpole-title">FLAGPOLE</h2>
+  <div class="flagpole-card">
+
+   <img src="flagpole.jpg"
+    alt="School Flagpole"
+    class="flagpole-image"
+    onclick="openFullscreen(this.src)">
+
+   <h3>School Flagpole</h3>
+
+   <p>The flagpole is one of the important landmarks within the school campus. It serves as a recognizable reference point that can help students and visitors determine their location while navigating around the school.</p>
+
+   <p>It is located in a central area of the campus and can be used as a visual guide when finding nearby buildings and other important facilities.</p>
+
+   <p>Through the QR-Based Campus Navigation System, users can easily identify the flagpole and learn more about its location without having to manually search around the campus.</p>
+
+   <p>This landmark can also help new students become familiar with the layout of the school and understand where they are in relation to other destinations.</p>
+
+  </div>
+ </div>
+</div>
+
+<!-- GULAYAN PAGE -->
+<div id="gulayanPage">
+ <div class="gulayan-detail">
+  <button class="gulayan-back" onclick="closeGulayan()">← BACK TO MAP</button>
+  <h2 class="gulayan-title">GULAYAN</h2>
+  <div class="gulayan-card">
+
+   <img src="gulayan.jpg"
+    alt="School Gulayan"
+    class="gulayan-image"
+    onclick="openFullscreen(this.src)">
+
+   <h3>School Gulayan</h3>
+
+   <p>The Gulayan is an important area within the school campus where vegetables and plants can be grown and maintained.</p>
+
+   <p>It provides students with an opportunity to learn about gardening, plants, environmental care, and the importance of maintaining a healthy and sustainable school environment.</p>
+
+   <p>Through the QR-Based Campus Navigation System, users can easily locate the Gulayan on the campus map and identify its position within the school grounds.</p>
+
+   <p>The Gulayan can also serve as a useful landmark for students and visitors when navigating around the campus.</p>
+
+  </div>
+ </div>
+</div>
+
+<!-- NORTH BUILDING PAGE -->
+<div id="northbuildingPage">
+ <div class="northbuilding-detail">
+
+  <button class="northbuilding-back" onclick="closeNorthBuilding()">← BACK TO MAP</button>
+
+  <h2 class="northbuilding-title">SCOUTS</h2>
+
+  <div class="northbuilding-card">
+
+   <img src="scouts.jpg"
+    alt="Scouts"
+    class="northbuilding-image"
+    onclick="openFullscreen(this.src)">
+
+   <h3>Scouts</h3>
+
+   <p>The North Building is located at the northern section of the campus, indicated by the yellow arrow on the map. It houses several classrooms and facilities used by students and faculty members.</p>
+
+   <p>Situated along the main thoroughfare leading toward the upper part of the campus, this building serves as a key reference point when navigating toward the northern grounds and adjacent facilities.</p>
+
+   <p>Through the QR-Based Campus Navigation System, users can quickly locate this building and view directions from their current position.</p>
+
+   <p>It is an important landmark especially for newcomers, helping them orient themselves as they move between the central area and the northern part of the campus.</p>
+
+  </div>
+ </div>
+</div>
+
+<!-- IMAGE VIEWER -->
+<div class="image-viewer" id="imageViewer" onclick="closeImage()">
+ <img id="fullscreenImage" src="" alt="Fullscreen Image">
+</div>
+
+<!-- FLAGPOLE PROMPT -->
+<div id="locatePrompt" class="locate-prompt">
+ <div class="locate-box">
+  <div class="locate-icon">📍</div>
+  <h2>LOCATE FLAGPOLE?</h2>
+  <p>Do you want to locate the Flagpole on the campus map?</p>
+  <div class="locate-buttons">
+   <button onclick="locateFlagpole()">YES</button>
+   <button onclick="closeLocatePrompt()">NO</button>
+  </div>
+ </div>
+</div>
+
+<!-- GULAYAN PROMPT -->
+<div id="gulayanPrompt" class="locate-prompt">
+ <div class="locate-box">
+  <div class="locate-icon">📍</div>
+  <h2>LOCATE GULAYAN?</h2>
+  <p>Do you want to locate the Gulayan on the campus map?</p>
+  <div class="locate-buttons">
+   <button onclick="locateGulayan()">YES</button>
+   <button onclick="closeGulayanPrompt()">NO</button>
+  </div>
+ </div>
+</div>
+
+<!-- NORTH BUILDING PROMPT -->
+<div id="northbuildingPrompt" class="locate-prompt">
+ <div class="locate-box">
+  <div class="locate-icon">📍</div>
+  <h2>LOCATE SCOUTS?</h2>
+  <p>Do you want to locate the Scouts on the campus map?</p>
+  <div class="locate-buttons">
+   <button onclick="locateNorthBuilding()">YES</button>
+   <button onclick="closeNorthBuildingPrompt()">NO</button>
+  </div>
+ </div>
+</div>
+
+<script>
+/* START */
+function startNavigation(){
+ const startPage=document.getElementById("startPage");
+ const mainPage=document.getElementById("mainPage");
+ const loadingScreen=document.getElementById("loadingScreen");
+ const startButton=document.querySelector(".start-button");
+ const progressBar=document.getElementById("loadingProgress");
+ const percent=document.getElementById("loadingPercent");
+ const status=document.getElementById("loadingStatus");
+
+ startButton.style.display="none";
+ loadingScreen.style.display="flex";
+ startPage.classList.add("clear");
+
+ let progress=0;
+
+ const loading=setInterval(()=>{
+  progress++;
+  progressBar.style.width=progress+"%";
+  percent.textContent=progress+"%";
+
+  if(progress>=100){
+   clearInterval(loading);
+   status.textContent="Our adventure finally begins now";
+   percent.textContent="100%";
+
+   setTimeout(()=>{
+    startPage.style.display="none";
+    mainPage.style.display="block";
+   },1000);
+  }
+ },25);
+}
+
+/* SIDEBAR */
+function toggleSidebar(){
+ document.getElementById("sidebar").classList.toggle("open");
+}
+
+/* SECTIONS */
+function showSection(id,button){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+
+ document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+ button.classList.add("active");
+}
+
+/* FLAGPOLE */
+function openFlagpole(){
+ document.getElementById("flagpolePage").classList.add("active");
+}
+
+function closeFlagpole(){
+ document.getElementById("flagpolePage").classList.remove("active");
+}
+
+function askLocateFlagpole(){
+ document.getElementById("locatePrompt").classList.add("active");
+}
+
+function closeLocatePrompt(){
+ document.getElementById("locatePrompt").classList.remove("active");
+}
+
+function locateFlagpole(){
+ closeLocatePrompt();
+
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById("map").classList.add("active");
+
+ document.querySelectorAll(".menu button").forEach(b=>{
+  b.classList.remove("active");
+
+  if(b.textContent.trim()==="Map")
+   b.classList.add("active");
+ });
+
+ document.getElementById("sidebar").classList.add("open");
+
+ setTimeout(()=>{
+  document.querySelector(".flagpole-marker").classList.add("located");
+ },350);
+}
+
+/* GULAYAN */
+function openGulayan(){
+ document.getElementById("gulayanPage").classList.add("active");
+}
+
+function closeGulayan(){
+ document.getElementById("gulayanPage").classList.remove("active");
+}
+
+function askLocateGulayan(){
+ document.getElementById("gulayanPrompt").classList.add("active");
+}
+
+function closeGulayanPrompt(){
+ document.getElementById("gulayanPrompt").classList.remove("active");
+}
+
+function locateGulayan(){
+ closeGulayanPrompt();
+
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById("map").classList.add("active");
+
+ document.querySelectorAll(".menu button").forEach(b=>{
+  b.classList.remove("active");
+
+  if(b.textContent.trim()==="Map")
+   b.classList.add("active");
+ });
+
+ document.getElementById("sidebar").classList.add("open");
+
+ setTimeout(()=>{
+  document.querySelector(".gulayan-marker").classList.add("gulayan-located");
+ },350);
+}
+
+/* NORTH BUILDING / SCOUTS */
+function openNorthBuilding(){
+ document.getElementById("northbuildingPage").classList.add("active");
+}
+
+function closeNorthBuilding(){
+ document.getElementById("northbuildingPage").classList.remove("active");
+}
+
+function askLocateNorthBuilding(){
+ document.getElementById("northbuildingPrompt").classList.add("active");
+}
+
+function closeNorthBuildingPrompt(){
+ document.getElementById("northbuildingPrompt").classList.remove("active");
+}
+
+function locateNorthBuilding(){
+ closeNorthBuildingPrompt();
+
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById("map").classList.add("active");
+
+ document.querySelectorAll(".menu button").forEach(b=>{
+  b.classList.remove("active");
+
+  if(b.textContent.trim()==="Map")
+   b.classList.add("active");
+ });
+
+ document.getElementById("sidebar").classList.add("open");
+
+ setTimeout(()=>{
+  document.querySelector(".northbuilding-marker").classList.add("northbuilding-located");
+ },350);
+}
+
+/* IMAGE VIEWER */
+const imageViewer=document.getElementById("imageViewer");
+const fullscreenImage=document.getElementById("fullscreenImage");
+
+document.querySelectorAll(".about-gallery img").forEach(img=>{
+ img.onclick=()=>openFullscreen(img.src);
+});
+
+function openFullscreen(src){
+ fullscreenImage.src=src;
+ imageViewer.classList.add("active");
+}
+
+function closeImage(){
+ imageViewer.classList.remove("active");
+ fullscreenImage.src="";
+}
+</script>
+
+</body>
+</html>
